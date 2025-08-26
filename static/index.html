@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Просмотр заказа</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        form { margin-bottom: 20px; }
+        input[type="text"] { padding: 8px; width: 300px; }
+        button { padding: 8px 16px; background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        #result { border: 1px solid #ddd; padding: 16px; border-radius: 4px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f4f4f4; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+<h1>Просмотр информации о заказе</h1>
+<form onsubmit="getOrder(); return false;">
+    <label for="orderId">Введите ID заказа (order_uid):</label><br>
+    <input type="text" id="orderId" required>
+    <button type="submit">Получить данные</button>
+</form>
+<div id="result"></div>
+
+<script>
+    function getOrder() {
+        const uid = document.getElementById('orderId').value.trim();
+        if (!uid) {
+            alert('Введите ID заказа');
+            return;
+        }
+
+        fetch(`/order/${uid}`)
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 404) {
+                        throw new Error('Заказ не найден');
+                    }
+                    throw new Error('Ошибка сервера');
+                }
+                return response.json();
+            })
+            .then(data => displayOrder(data))
+            .catch(error => {
+                document.getElementById('result').innerHTML = `<p class="error">${error.message}</p>`;
+            });
+    }
+
+    function displayOrder(order) {
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = `
+                <h2>Заказ: ${order.order_uid}</h2>
+                <p><strong>Трек-номер:</strong> ${order.track_number}</p>
+                <p><strong>Дата создания:</strong> ${new Date(order.date_created).toLocaleString()}</p>
+                <p><strong>Клиент:</strong> ${order.customer_id}</p>
+                <p><strong>Локаль:</strong> ${order.locale}</p>
+
+                <h3>Доставка</h3>
+                <p><strong>Имя:</strong> ${order.delivery.name}</p>
+                <p><strong>Телефон:</strong> ${order.delivery.phone}</p>
+                <p><strong>Адрес:</strong> ${order.delivery.address}, ${order.delivery.city}, ${order.delivery.region} (${order.delivery.zip})</p>
+                <p><strong>Email:</strong> ${order.delivery.email}</p>
+
+                <h3>Оплата</h3>
+                <p><strong>Транзакция:</strong> ${order.payment.transaction}</p>
+                <p><strong>Сумма:</strong> ${order.payment.amount} ${order.payment.currency}</p>
+                <p><strong>Дата оплаты:</strong> ${new Date(order.payment.payment_dt * 1000).toLocaleString()}</p>
+                <p><strong>Стоимость доставки:</strong> ${order.payment.delivery_cost}</p>
+                <p><strong>Итого товаров:</strong> ${order.payment.goods_total}</p>
+
+                <h3>Товары</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Название</th>
+                            <th>Цена</th>
+                            <th>Скидка (%)</th>
+                            <th>Итого</th>
+                            <th>Бренд</th>
+                            <th>Статус</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${order.items.map(item => `
+                            <tr>
+                                <td>${item.name}</td>
+                                <td>${item.price}</td>
+                                <td>${item.sale}</td>
+                                <td>${item.total_price}</td>
+                                <td>${item.brand}</td>
+                                <td>${item.status}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+    }
+</script>
+</body>
+</html>
