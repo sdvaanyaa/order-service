@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"github.com/gofiber/fiber/v2"
-	"github.com/sdvaanyaa/order-service.git/internal/config"
-	"github.com/sdvaanyaa/order-service.git/internal/handler"
-	"github.com/sdvaanyaa/order-service.git/internal/repository/postgres"
-	"github.com/sdvaanyaa/order-service.git/internal/service"
-	"github.com/sdvaanyaa/order-service.git/pkg/pgdb"
+	"github.com/sdvaanyaa/order-service/internal/config"
+	"github.com/sdvaanyaa/order-service/internal/consumer"
+	"github.com/sdvaanyaa/order-service/internal/handler"
+	"github.com/sdvaanyaa/order-service/internal/repository/postgres"
+	"github.com/sdvaanyaa/order-service/internal/service"
+	"github.com/sdvaanyaa/order-service/pkg/pgdb"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -32,6 +34,17 @@ func main() {
 	repo := postgres.New(db, log)
 	svc := service.New(repo, transactor, log)
 	h := handler.New(svc)
+
+	cons, err := consumer.New(cfg.Kafka, svc, log)
+	if err != nil {
+		log.Error("kafka consumer init failed", "err", err)
+		os.Exit(1)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go cons.Run(ctx)
+	<-cons.Ready()
+	log.Info("kafka consumer ready")
 
 	app := fiber.New()
 	h.SetupRoutes(app, log)

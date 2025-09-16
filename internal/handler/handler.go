@@ -3,9 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"github.com/gofiber/fiber/v2"
-	"github.com/sdvaanyaa/order-service.git/internal/middleware"
-	"github.com/sdvaanyaa/order-service.git/internal/models"
-	"github.com/sdvaanyaa/order-service.git/internal/service"
+	"github.com/sdvaanyaa/order-service/internal/middleware"
+	"github.com/sdvaanyaa/order-service/internal/models"
+	"github.com/sdvaanyaa/order-service/internal/service"
 	"log/slog"
 )
 
@@ -30,7 +30,6 @@ func (h *Handler) AddOrder(c *fiber.Ctx) error {
 	if err := json.Unmarshal(c.Body(), &order); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid JSON"})
 	}
-
 	if err := h.svc.AddOrder(c.Context(), &order); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal error"})
 	}

@@ -10,6 +10,7 @@ import (
 type Config struct {
 	Postgres PostgresConfig
 	HTTP     HTTPConfig
+	Kafka    KafkaConfig
 }
 
 type PostgresConfig struct {
@@ -36,13 +37,22 @@ func (c HTTPConfig) Address() string {
 	return ":" + c.Port
 }
 
+type KafkaConfig struct {
+	Brokers []string `env:"KAFKA_BROKERS" envSeparator:"," envDefault:"localhost:9092"`
+	Topic   string   `env:"KAFKA_TOPIC" envDefault:"orders"`
+	Group   string   `env:"KAFKA_GROUP" envDefault:"order-service"`
+}
+
 func LoadConfig() (*Config, error) {
 	if err := godotenv.Load(); err != nil {
 		slog.Warn("No .env file found", "err", err)
 	}
+
 	var cfg Config
+
 	if err := env.Parse(&cfg); err != nil {
 		return nil, err
 	}
+
 	return &cfg, nil
 }

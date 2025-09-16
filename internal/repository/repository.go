@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"github.com/sdvaanyaa/order-service.git/internal/models"
+	"github.com/sdvaanyaa/order-service/internal/models"
 )
 
 type OrderRepository interface {

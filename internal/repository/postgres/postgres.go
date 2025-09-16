@@ -1,8 +1,8 @@
 package postgres
 
 import (
-	"github.com/sdvaanyaa/order-service.git/internal/repository"
-	"github.com/sdvaanyaa/order-service.git/pkg/pgdb"
+	"github.com/sdvaanyaa/order-service/internal/repository"
+	"github.com/sdvaanyaa/order-service/pkg/pgdb"
 	"log/slog"
 )
 

@@ -2,7 +2,7 @@ package postgres
 
 import (
 	"context"
-	"github.com/sdvaanyaa/order-service.git/internal/models"
+	"github.com/sdvaanyaa/order-service/internal/models"
 )
 
 func (r *OrderRepo) LoadAllOrders(ctx context.Context) (map[string]*models.Order, error) {

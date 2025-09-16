@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/sdvaanyaa/order-service.git/internal/config"
+	"github.com/sdvaanyaa/order-service/internal/config"
 	"log/slog"
 )
 

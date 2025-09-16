@@ -31,3 +31,6 @@ linters:
       min-complexity: 10
     gocognit:
       min-complexity: 10
+    mnd:
+      ignored-files:
+        - 'cmd/producer/main\.go$'

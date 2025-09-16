@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/jackc/pgx/v5"
-	"github.com/sdvaanyaa/order-service.git/internal/models"
+	"github.com/sdvaanyaa/order-service/internal/models"
 )
 
 func (r *OrderRepo) GetOrderByUID(ctx context.Context, uid string) (*models.Order, error) {

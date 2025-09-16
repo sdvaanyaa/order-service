@@ -1,4 +1,4 @@
-include .env.example
+include .env
 export
 
 BINARY_NAME = order-service
@@ -27,6 +27,10 @@ start:
 	@echo "Starting application"
 	@$(BUILD_DIR)/$(BINARY_NAME)
 
+producer:
+	@echo "Running producer"
+	@go run ./cmd/producer/main.go
+
 run: bin-deps up goose-up update linter build start
 
 clean:
@@ -39,7 +43,7 @@ bin-deps:
 	@go install github.com/pressly/goose/v3/cmd/goose@latest
 
 up:
-	@echo "Starting Docker Compose"
+	@echo "Starting Docker Compose (Postgres + Kafka)"
 	@docker-compose up -d
 
 down:

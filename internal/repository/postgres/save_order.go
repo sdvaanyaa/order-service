@@ -2,7 +2,7 @@ package postgres
 
 import (
 	"context"
-	"github.com/sdvaanyaa/order-service.git/internal/models"
+	"github.com/sdvaanyaa/order-service/internal/models"
 )
 
 func (r *OrderRepo) SaveOrder(ctx context.Context, order *models.Order) error {
