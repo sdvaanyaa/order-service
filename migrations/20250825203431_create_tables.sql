@@ -55,7 +55,6 @@ CREATE TABLE IF NOT EXISTS items (
     status INTEGER
 );
 -- +goose StatementEnd
-r
 -- +goose Down
 -- +goose StatementBegin
 DROP TABLE IF EXISTS items;

@@ -2,7 +2,12 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"github.com/sdvaanyaa/order-service/internal/models"
+)
+
+var (
+	ErrOrderNotFound = errors.New("timestamp not found")
 )
 
 type OrderRepository interface {

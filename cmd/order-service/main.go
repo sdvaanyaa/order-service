@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/sdvaanyaa/order-service/internal/config"
 	"github.com/sdvaanyaa/order-service/internal/consumer"
@@ -32,7 +33,8 @@ func main() {
 
 	transactor := pgdb.NewTransactor(db)
 	repo := postgres.New(db, log)
-	svc := service.New(repo, transactor, log)
+	val := validator.New()
+	svc := service.New(repo, transactor, log, val)
 	h := handler.New(svc)
 
 	cons, err := consumer.New(cfg.Kafka, svc, log)

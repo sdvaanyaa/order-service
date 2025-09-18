@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/jackc/pgx/v5"
 	"github.com/sdvaanyaa/order-service/internal/models"
+	"github.com/sdvaanyaa/order-service/internal/repository"
 )
 
 func (r *OrderRepo) GetOrderByUID(ctx context.Context, uid string) (*models.Order, error) {
@@ -12,9 +13,8 @@ func (r *OrderRepo) GetOrderByUID(ctx context.Context, uid string) (*models.Orde
 
 	if err := r.getOrder(ctx, uid, order); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil
+			return nil, repository.ErrOrderNotFound
 		}
-
 		return nil, err
 	}
 

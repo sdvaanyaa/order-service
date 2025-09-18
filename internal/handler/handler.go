@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/sdvaanyaa/order-service/internal/middleware"
 	"github.com/sdvaanyaa/order-service/internal/models"
@@ -31,7 +32,14 @@ func (h *Handler) AddOrder(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid JSON"})
 	}
 	if err := h.svc.AddOrder(c.Context(), &order); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal error"})
+		switch {
+		case errors.Is(err, service.ErrInvalidInput):
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		case errors.Is(err, service.ErrOrderAlreadyExists):
+			return c.Status(fiber.StatusConflict).JSON(fiber.Map{"error": err.Error()})
+		default:
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		}
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{"status": "ok"})
@@ -46,7 +54,7 @@ func (h *Handler) GetOrder(c *fiber.Ctx) error {
 	}
 
 	if order == nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "not found"})
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "order not found"})
 	}
 
 	return c.JSON(order)

@@ -2,11 +2,18 @@ package service
 
 import (
 	"context"
+	"errors"
+	"github.com/go-playground/validator/v10"
 	"github.com/sdvaanyaa/order-service/internal/models"
 	"github.com/sdvaanyaa/order-service/internal/repository"
 	"github.com/sdvaanyaa/order-service/pkg/pgdb"
 	"log/slog"
 	"sync"
+)
+
+var (
+	ErrInvalidInput       = errors.New("invalid input")
+	ErrOrderAlreadyExists = errors.New("order already exists")
 )
 
 type OrderService interface {
@@ -20,14 +27,21 @@ type orderService struct {
 	log        *slog.Logger
 	cache      map[string]*models.Order
 	mu         sync.RWMutex
+	val        *validator.Validate
 }
 
-func New(repo repository.OrderRepository, transactor pgdb.Transactor, log *slog.Logger) OrderService {
+func New(
+	repo repository.OrderRepository,
+	transactor pgdb.Transactor,
+	log *slog.Logger,
+	val *validator.Validate,
+) OrderService {
 	svc := &orderService{
 		repo:       repo,
 		transactor: transactor,
 		log:        log,
 		cache:      make(map[string]*models.Order),
+		val:        val,
 	}
 
 	svc.loadCache(context.Background())
@@ -35,23 +49,22 @@ func New(repo repository.OrderRepository, transactor pgdb.Transactor, log *slog.
 	return svc
 }
 
-func (s *orderService) loadCache(ctx context.Context) {
-	cached, err := s.repo.LoadAllOrders(ctx)
-	if err != nil {
-		s.log.Error("failed to load cache", "err", err)
-		return
+func (s *orderService) AddOrder(ctx context.Context, order *models.Order) error {
+	if err := s.val.Struct(order); err != nil {
+		return ErrInvalidInput
 	}
 
-	s.mu.Lock()
-	s.cache = cached
-	s.mu.Unlock()
+	existingOrders, err := s.repo.GetOrderByUID(ctx, order.OrderUID)
+	if err != nil && !errors.Is(err, repository.ErrOrderNotFound) {
+		return err
+	}
 
-	s.log.Info("cache loaded", "count", len(cached))
-}
+	if existingOrders != nil {
+		return ErrOrderAlreadyExists
+	}
 
-func (s *orderService) AddOrder(ctx context.Context, order *models.Order) error {
 	return s.transactor.WithinTransaction(ctx, func(txCtx context.Context) error {
-		err := s.repo.SaveOrder(txCtx, order)
+		err = s.repo.SaveOrder(txCtx, order)
 		if err != nil {
 			return err
 		}
@@ -84,4 +97,18 @@ func (s *orderService) GetOrder(ctx context.Context, uid string) (*models.Order,
 	}
 
 	return order, nil
+}
+
+func (s *orderService) loadCache(ctx context.Context) {
+	cached, err := s.repo.LoadAllOrders(ctx)
+	if err != nil {
+		s.log.Error("failed to load cache", "err", err)
+		return
+	}
+
+	s.mu.Lock()
+	s.cache = cached
+	s.mu.Unlock()
+
+	s.log.Info("cache loaded", "count", len(cached))
 }

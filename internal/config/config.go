@@ -18,7 +18,7 @@ type PostgresConfig struct {
 	Port     string `env:"POSTGRES_PORT" envDefault:"5432"`
 	Username string `env:"POSTGRES_USER" envDefault:"postgres"`
 	Password string `env:"POSTGRES_PASSWORD" envDefault:"postgres"`
-	Database string `env:"POSTGRES_DB" envDefault:"orders_db"`
+	Database string `env:"POSTGRES_DB" envDefault:"orders"`
 	SSLMode  string `env:"POSTGRES_SSLMODE" envDefault:"disable"`
 }
 
