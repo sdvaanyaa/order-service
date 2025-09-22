@@ -93,6 +93,7 @@ func (c *kafkaConsumer) Run(ctx context.Context) {
 }
 
 func (h *Handler) Setup(sarama.ConsumerGroupSession) error {
+	h.log.Info("consumer setup complete, ready to consume")
 	close(h.ready)
 	return nil
 }
@@ -108,6 +109,12 @@ func (h *Handler) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama
 			if !ok {
 				return nil
 			}
+			h.log.Info(
+				"message received",
+				slog.String("topic", msg.Topic),
+				slog.Int("partition", int(msg.Partition)),
+				slog.Int64("offset", msg.Offset),
+			)
 			h.processMessage(session, msg)
 		case <-session.Context().Done():
 			return nil
@@ -123,10 +130,14 @@ func (h *Handler) processMessage(session sarama.ConsumerGroupSession, msg *saram
 		return
 	}
 
+	h.log.Info("processing order", slog.String("order_uid", order.OrderUID))
+
 	err := h.tryAddOrder(session.Context(), &order)
 	if err != nil {
 		h.log.Error("add order failed after retries", slog.Any("error", err))
 		// consider DLQ in prod
+	} else {
+		h.log.Info("order processed", slog.String("order_uid", order.OrderUID))
 	}
 
 	session.MarkMessage(msg, "")
