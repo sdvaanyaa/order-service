@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/sdvaanyaa/order-service/internal/middleware"
 	"github.com/sdvaanyaa/order-service/internal/models"
+	"github.com/sdvaanyaa/order-service/internal/repository"
 	"github.com/sdvaanyaa/order-service/internal/service"
 	"log/slog"
 )
@@ -50,11 +51,10 @@ func (h *Handler) GetOrder(c *fiber.Ctx) error {
 
 	order, err := h.svc.GetOrder(c.Context(), uid)
 	if err != nil {
+		if errors.Is(err, repository.ErrOrderNotFound) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "order not found"})
+		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "internal error"})
-	}
-
-	if order == nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "order not found"})
 	}
 
 	return c.JSON(order)

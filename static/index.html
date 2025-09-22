@@ -4,27 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Просмотр заказа</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        form { margin-bottom: 20px; }
-        input[type="text"] { padding: 8px; width: 300px; }
-        button { padding: 8px 16px; background: #007bff; color: white; border: none; cursor: pointer; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: linear-gradient(to bottom, #f0f4f8, #d9e2ec); color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #007bff; }
+        form { display: flex; justify-content: center; align-items: center; margin-bottom: 20px; }
+        input[type="text"] { padding: 10px; width: 300px; border: 1px solid #ccc; border-radius: 5px; margin-right: 10px; transition: border 0.3s; }
+        input[type="text"]:focus { border-color: #007bff; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; transition: background 0.3s; }
         button:hover { background: #0056b3; }
-        #result { border: 1px solid #ddd; padding: 16px; border-radius: 4px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background: #f4f4f4; }
-        .error { color: red; }
+        #result { border: 1px solid #ddd; padding: 20px; border-radius: 10px; background: #fafafa; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #007bff; color: white; }
+        .error { color: #dc3545; font-weight: bold; text-align: center; }
+        .loading { text-align: center; font-style: italic; color: #6c757d; }
+        i { margin-right: 5px; color: #007bff; }
+        @media (max-width: 600px) { form { flex-direction: column; } input[type="text"] { width: 100%; margin-bottom: 10px; } }
     </style>
 </head>
 <body>
-<h1>Просмотр информации о заказе</h1>
-<form onsubmit="getOrder(); return false;">
-    <label for="orderId">Введите ID заказа (order_uid):</label><br>
-    <input type="text" id="orderId" required>
-    <button type="submit">Получить данные</button>
-</form>
-<div id="result"></div>
+<div class="container">
+    <h1><i class="fas fa-shopping-cart"></i> Просмотр информации о заказе</h1>
+    <form onsubmit="getOrder(); return false;">
+        <label for="orderId">Введите ID заказа (order_uid):</label><br>
+        <input type="text" id="orderId" required placeholder="Введите order_uid...">
+        <button type="submit"><i class="fas fa-search"></i> Получить данные</button>
+    </form>
+    <div id="result"></div>
+</div>
 
 <script>
     function getOrder() {
@@ -34,70 +43,73 @@
             return;
         }
 
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = '<p class="loading"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p>';
+
         fetch(`/order/${uid}`)
             .then(response => {
                 if (!response.ok) {
                     if (response.status === 404) {
                         throw new Error('Заказ не найден');
                     }
-                    throw new Error('Ошибка сервера');
+                    throw new Error('Ошибка сервера: ' + response.statusText);
                 }
                 return response.json();
             })
             .then(data => displayOrder(data))
             .catch(error => {
-                document.getElementById('result').innerHTML = `<p class="error">${error.message}</p>`;
+                resultDiv.innerHTML = `<p class="error"><i class="fas fa-exclamation-triangle"></i> ${error.message}</p>`;
             });
     }
 
     function displayOrder(order) {
         const resultDiv = document.getElementById('result');
         resultDiv.innerHTML = `
-                <h2>Заказ: ${order.order_uid}</h2>
-                <p><strong>Трек-номер:</strong> ${order.track_number}</p>
-                <p><strong>Дата создания:</strong> ${new Date(order.date_created).toLocaleString()}</p>
-                <p><strong>Клиент:</strong> ${order.customer_id}</p>
-                <p><strong>Локаль:</strong> ${order.locale}</p>
+            <h2><i class="fas fa-file-invoice"></i> Заказ: ${order.order_uid}</h2>
+            <p><strong><i class="fas fa-truck"></i> Трек-номер:</strong> ${order.track_number}</p>
+            <p><strong><i class="fas fa-calendar-alt"></i> Дата создания:</strong> ${new Date(order.date_created).toLocaleString()}</p>
+            <p><strong><i class="fas fa-user"></i> Клиент:</strong> ${order.customer_id}</p>
+            <p><strong><i class="fas fa-globe"></i> Локаль:</strong> ${order.locale}</p>
 
-                <h3>Доставка</h3>
-                <p><strong>Имя:</strong> ${order.delivery.name}</p>
-                <p><strong>Телефон:</strong> ${order.delivery.phone}</p>
-                <p><strong>Адрес:</strong> ${order.delivery.address}, ${order.delivery.city}, ${order.delivery.region} (${order.delivery.zip})</p>
-                <p><strong>Email:</strong> ${order.delivery.email}</p>
+            <h3><i class="fas fa-shipping-fast"></i> Доставка</h3>
+            <p><strong>Имя:</strong> ${order.delivery.name}</p>
+            <p><strong>Телефон:</strong> ${order.delivery.phone}</p>
+            <p><strong>Адрес:</strong> ${order.delivery.address}, ${order.delivery.city}, ${order.delivery.region} (${order.delivery.zip})</p>
+            <p><strong>Email:</strong> ${order.delivery.email}</p>
 
-                <h3>Оплата</h3>
-                <p><strong>Транзакция:</strong> ${order.payment.transaction}</p>
-                <p><strong>Сумма:</strong> ${order.payment.amount} ${order.payment.currency}</p>
-                <p><strong>Дата оплаты:</strong> ${new Date(order.payment.payment_dt * 1000).toLocaleString()}</p>
-                <p><strong>Стоимость доставки:</strong> ${order.payment.delivery_cost}</p>
-                <p><strong>Итого товаров:</strong> ${order.payment.goods_total}</p>
+            <h3><i class="fas fa-credit-card"></i> Оплата</h3>
+            <p><strong>Транзакция:</strong> ${order.payment.transaction}</p>
+            <p><strong>Сумма:</strong> ${order.payment.amount} ${order.payment.currency}</p>
+            <p><strong>Дата оплаты:</strong> ${new Date(order.payment.payment_dt * 1000).toLocaleString()}</p>
+            <p><strong>Стоимость доставки:</strong> ${order.payment.delivery_cost}</p>
+            <p><strong>Итого товаров:</strong> ${order.payment.goods_total}</p>
 
-                <h3>Товары</h3>
-                <table>
-                    <thead>
+            <h3><i class="fas fa-box-open"></i> Товары</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Цена</th>
+                        <th>Скидка (%)</th>
+                        <th>Итого</th>
+                        <th>Бренд</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${order.items.map(item => `
                         <tr>
-                            <th>Название</th>
-                            <th>Цена</th>
-                            <th>Скидка (%)</th>
-                            <th>Итого</th>
-                            <th>Бренд</th>
-                            <th>Статус</th>
+                            <td>${item.name}</td>
+                            <td>${item.price}</td>
+                            <td>${item.sale}</td>
+                            <td>${item.total_price}</td>
+                            <td>${item.brand}</td>
+                            <td>${item.status}</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        ${order.items.map(item => `
-                            <tr>
-                                <td>${item.name}</td>
-                                <td>${item.price}</td>
-                                <td>${item.sale}</td>
-                                <td>${item.total_price}</td>
-                                <td>${item.brand}</td>
-                                <td>${item.status}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
     }
 </script>
 </body>
